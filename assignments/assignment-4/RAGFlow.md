@@ -102,3 +102,55 @@ Though episodic logs are not structured, it is good for temporal data and logica
 
 #Q10
 
+ ```mermaid
+flowchart LR
+    Client --> APIGW[API Gateway]
+
+    APIGW --> Query[Query Service]
+    Query --> VectorDB[(Vector DB)]
+    Query --> Reranker[Reranker]
+
+    Reranker --> Orchestrator[LLM Orchestrator]
+    Orchestrator --> LLM[(LLM APIs)]
+    Orchestrator --> Session[(Session Store)]
+
+    APIGW --> Ingest[Ingestion API]
+    Ingest --> Queue[(Queue)]
+    Queue --> Process[Processing & Embedding]
+    Process --> Index[Index Builder]
+    Index --> VectorDB
+
+    subgraph Stateless
+        APIGW
+        Query
+        Reranker
+        Orchestrator
+        Ingest
+        Process
+    end
+
+    subgraph Stateful
+        VectorDB
+        Session
+        Queue
+        Index
+    end
+  ```
+
+| Component                | Type        | Scaling Strategy                          | Notes |
+|--------------------------|------------|-------------------------------------------|-------|
+| API Gateway              | Stateless  | Horizontal autoscaling (HPA)              | Scale on request rate / latency |
+| Query Service            | Stateless  | Horizontal scaling                        | Add caching for hot queries |
+| Reranker                 | Stateless  | Horizontal (CPU/GPU pools)                | Batch requests for efficiency |
+| LLM Orchestrator         | Stateless  | Horizontal scaling                        | Use timeouts + circuit breakers |
+| Model Gateway            | Stateless  | Horizontal scaling                        | Handles rate limits, routing |
+| Ingestion API            | Stateless  | Horizontal scaling                        | Buffer via queue for spikes |
+| Preprocessing Workers    | Stateless  | Queue-based autoscaling                   | Scale on queue depth |
+| Embedding Service        | Stateless  | GPU/CPU pool scaling                      | Batch + model-specific autoscaling |
+| Index Builder            | Stateful   | Partition by dataset / shard              | Coordinates indexing jobs |
+| Vector DB                | Stateful   | Sharding + replication                    | Separate read/write paths |
+| Metadata DB              | Stateful   | Read replicas + vertical scaling          | Strong consistency where needed |
+| Object Store             | Stateful   | Virtually unlimited (managed scaling)     | Used for raw documents |
+| Session Store            | Stateful   | Partitioning (e.g., by user/session ID)   | Often backed by Redis |
+| Cache (Redis)            | Stateful   | Horizontal + partitioning                 | Reduces DB / retrieval load |
+| Queue / Event Bus        | Stateful   | Topic partitioning + consumer groups      | Enables async + backpressure |
