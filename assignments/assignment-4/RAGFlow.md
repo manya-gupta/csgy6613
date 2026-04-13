@@ -10,7 +10,7 @@ Template based chunking does a good job for highly structured documents because 
 
 Vector-only and Lexical-only retrieval architectures optimize for different cases. Lexical search is more efficient but lacks flexibility. Additionally, the keyword matching of lexical searching is more precise but sometimes important context is lost. Vector search retains context and therefore is better at interpreting concepts, but is often more computationally expensive. If an exact match is needed, such as in important medical or legal cases, lexical search will retain precision, whereas vector search might confuse similar concepts, since it looks for encoded context. However, if you are using more general language rather than precise terminology, vector search works better. Lexical search might miss that a search for “pet” would include “dog”, but vector search is more likely to maintain that correlation. 
 
-Using a hybrid architecture can help with both types of documents, however, re-ranking adds important context from multiple sources to give the most comprehensive answer. The BM score and lexical matching return information that matches most closely to the query, but important information with a lower matching score can be missed using these methods. Re-ranking helps retrieve such information. If the query and the correct answer do not match well, hybrid architecture has trouble making the connection. This is when the query itself has a logical fallacy or the subject of the query is only vaguely related to the information actually needed to successfully answer the query. This is because re-ranking adds extra conditional logic that compares the query itself with the data sources. Without rerank, RAGFlow uses weighted keyword similarity combined with weighted vector cosine similarity. If a rerank model is selected, weighted keyword similarity will be combined with weighted vector reranking score.
+Using a hybrid architecture can help with both types of documents, however, re-ranking adds important context from multiple sources to give the most comprehensive answer. The BM score and lexical matching return information that matches most closely to the query, but important information with a lower matching score can be missed using these methods. Re-ranking helps retrieve such information. If the query and the correct answer do not match well, hybrid architecture has trouble making the connection. This is when the query itself has a logical fallacy or the subject of the query is only vaguely related to the information actually needed to successfully answer the query. This is because re-ranking adds extra conditional logic that compares multiple data sources with the query, assigning them an index of relevency to the query. They are then sorted, with the most relevant at the top. Without rerank, RAGFlow uses weighted keyword similarity combined with weighted vector cosine similarity. If a rerank model is selected, weighted keyword similarity will be combined with weighted vector reranking score.
 
 #Q4
 
@@ -78,6 +78,19 @@ Using a knowledge graph creates nodes (entities) and edges (relations). This all
 
 #Q8
 
+```mermaid
+flowchart TD
+    A([Data Sources]) --> B[Clean data\nEnhance granularity]
+    B --> C[Data Chunking\nSliding Window]
+    C --> D[Optimize Index Structures\nAdd metadata tags]
+    D --> E[Embedding]
+    F([Embedding Model]) --> E
+    
+```
+
+The sliding window allows for incremental indexing while neighboring context is perserved. Data cleaning methods and the chunking process creates schema normalization across sources. Allowing for different representations of data depending on the type of document is helpful here.
+
+Processing data incrementally allows for strong consistency on data processing, but greatly slows throughput. Processing items in parallel allows for higher throughput (more items at once) which decreases time but the tradeoff is consistency.
 
 #Q9
 
